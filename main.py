@@ -34,9 +34,6 @@ def tia_maps_generation(volume_path, seg_path, dict_rescaled, output_path:str, s
         tia_maps.resampling_2p21(output_image, os.path.join(output_path, 'tia_map_sim_2p21.nrrd'))
 
 
-
-
-
 def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path:str, output_path:str):
 
     img_or, img_sim= input_files(original_24h_path, simulated_24h_path)
