@@ -144,7 +144,6 @@ def total_computation(dict_total:dict):
 
         original= dict_total[voi][0]
         simulated= dict_total[voi][1]
-        
 
         t_data_or, y_data_or, sigma_or = prepare_data(original)
         t_data_sim, y_data_sim, sigma_sim = prepare_data(simulated)
