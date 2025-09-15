@@ -2,13 +2,13 @@ import SimpleITK as sitk
 import functions
 import lmfit_TAC
 import tia_maps
+import ab_dose
 import os
 
 
 def input_files(original_path:str, simind_path:str):
     img_or= functions.read_dicom(original_path)
-    img_sim= functions.read_dicom()
-
+    img_sim= functions.read_dicom(simind_path)
     return img_or, img_sim
 
 def tac_computation(dict_vois:dict, img_24h: sitk.Image):
@@ -19,7 +19,7 @@ def tac_computation(dict_vois:dict, img_24h: sitk.Image):
     
     return dict_rescaled
 
-def tia_maps_generation(volume_path, seg_path, dict_rescaled, output_path:str, sim=False):
+def tia_maps_generation(volume_path:str, seg_path:str, dict_rescaled:dict, output_path:str, sim=False):
 
     np_image, np_seg= tia_maps.input_volumes(volume_path, seg_path)
     dict_masks= tia_maps.product(np_image, np_seg)
@@ -33,6 +33,14 @@ def tia_maps_generation(volume_path, seg_path, dict_rescaled, output_path:str, s
         output_image= tia_maps.computation(dict_rescaled, dict_masks, volume_path, output_tia, index=1)
         tia_maps.resampling_2p21(output_image, os.path.join(output_path, 'tia_map_sim_2p21.nrrd'))
 
+def abdose_calc(tia_path:str, seg_path:str, output_map_path:str, output_path_statistics:str):
+
+    tia_map, seg_image, resampled_seg= ab_dose.read_images(tia_path, seg_path)
+    kernel= ab_dose.kernel_computation()
+    abdose_map= ab_dose.convolution(tia_map, kernel, output_map_path)
+    ab_dose.statistics(abdose_map, resampled_seg, output_path_statistics)
+
+
 
 def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path:str, output_path:str):
 
@@ -42,6 +50,13 @@ def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path
 
     tia_maps_generation(original_24h_path, seg_path, dict_rescaled, output_path, sim=False)
     tia_maps_generation(simulated_24h_path, seg_path, dict_rescaled, output_path, sim=True)
+
+    tia_or_path= os.path.join(output_path, 'tia_map_or_2p21.nrrd')    
+    tia_sim_path= os.path.join(output_path, 'tia_map_sim_2p21.nrrd')
+
+    abdose_calc(tia_or_path, seg_path, os.path.join(output_path, 'abdose_map_or.nrrd'), os.path.join(output_path, 'dose_statistics_or.txt'))
+    abdose_calc(tia_sim_path, seg_path, output_path, os.path.join(output_path, 'abdose_map_sim.nrrd'), os.path.join(output_path, 'dose_statistics_sim.txt'))
+
 
 
 
