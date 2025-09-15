@@ -1,5 +1,4 @@
 import sys
-sys.path.append('C:\\simind')
 import numpy as np
 import matplotlib.pyplot as plt
 import SimpleITK as sitk
