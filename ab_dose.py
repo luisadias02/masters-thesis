@@ -130,21 +130,17 @@ def density_correction(ct_path:str, output_density_path:str, abdose_path:str):
 
     return corrected_map
 
-def statistcs(ab_dose_map:np.array, resampled_seg:np.array, path:str):
+def statistics(ab_dose_map:np.array, resampled_seg:np.array, path:str):
         
     values= np.unique(resampled_seg)
     keys= {1:'spleen', 2:'right kidney', 3:'left kidney', 5:'liver', 22:'tumor1', 23:'tumor2'} #p1 segmentation keys 
 
     with open(path, 'w') as f:
         for value in values[1:]:
-            if value != 21:
+            if value != 21 and value != 28:
                 f.write(f'Segmentation value: {value} ({keys[value]})\n')
-                if keys[value] == 'right kidney' or keys[value] == 'left kidney' or keys[value] == 'tumor1' or keys[value] == 'tumor2':
-                    thresh= 0.002
-                else: 
-                    thresh= 1e-4
                     
-                spect_foreground = ab_dose_map > thresh
+                spect_foreground = ab_dose_map > 0
                 mask = (resampled_seg == value) & spect_foreground
                 conv_value = ab_dose_map[mask]
 
