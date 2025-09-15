@@ -2,4 +2,12 @@ In this repository, the developed code for the dosimetry of 177Lu patients is pr
 
 - This code was created as part of my masters thesis, where patients treated with 177Lu (specifically PSMA) were analyzed;
 - Two sets of data (real and simulated) are studied, to ultimately be compared;
+
+Some important notes:
+
+- The volumes (real and simulated) need to be aligned, as well as the segmentation;
+- 5 time-points are needed, with one of them being the (0,0), i.e. the activity in the VOI at injection-time is zero. If less are given, the script does not run and an error is presented;
+- The generated absorbed dose maps are normalized to the injected activity. If one wishes to override this, the administred activity value can be set to 1.
+The generated Y-Scale in the TACs will correspond to absolute values of activity (MBq/100).
+- 
   
