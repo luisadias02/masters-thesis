@@ -50,6 +50,20 @@ def abdose_calc(tia_path:str, seg_path:str, output_map_path:str, output_path_sta
 
 def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path:str, output_path:str, administered_activity:float):
 
+    """
+    This is the main function, responsible for executing the entire dosimetry workflow. To accurately compare the real and
+    simulated absorbed doses the volumes need to be aligned between each other and with the segmentation.
+
+    Args:
+    - dict_vois (dict): dictionary with the real and simulated activities per VOI for each time-point. 
+    - original_24_path (str): path to the original 24h .nii or .nrrd file
+    - original_24_path (str): path to the simulated 24h .nii or .nrrd file
+    - seg_path (str): path to the aligned segmentation 
+    - output_path (str): path to the main folder to save the files (all the files will be saved in this folder)
+    - administered_activity (float): injected activity (MBq)
+
+    """
+
     img_or, img_sim= input_files(original_24h_path, simulated_24h_path)
 
     dict_rescaled= tac_computation(dict_vois, img_or, administered_activity)
