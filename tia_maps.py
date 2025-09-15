@@ -1,5 +1,4 @@
 import sys
-sys.path.append('C:\\simind')
 import numpy as np
 import matplotlib.pyplot as plt
 import SimpleITK as sitk
@@ -93,7 +92,7 @@ def map_computation(dict_cumulated: dict, masks: dict, volume_path: str, output_
     
     """
 
-    keys= {1:'spleen', 2:'right kidney', 3:'left kidney', 5:'liver', 21:'bladder', 22:'tumor1', 23:'tumor2', 0:'remaining'} #p1 segmentation keys 
+    keys= {1:'spleen', 2:'right kidney', 3:'left kidney', 5:'liver', 21:'bladder', 22:'tumor1', 23:'tumor2', 0:'remaining'} #segmentation keys - if TotalSegmentator is used
 
     size= sitk.GetArrayFromImage(functions.read_dicom(volume_path)).shape
     total_array = np.zeros((size[0], size[1], size[2]))
@@ -107,7 +106,7 @@ def map_computation(dict_cumulated: dict, masks: dict, volume_path: str, output_
     total_image.SetSpacing(functions.read_dicom(volume_path).GetSpacing())
 
     sitk.WriteImage(total_image, output_path)
-    print('image saved in:', output_path)
+    print('TIA map saved in:', output_path)
 
     return output_path
 
@@ -147,7 +146,7 @@ def resampling_2p21(tia_map_path:str, output_path: str):
     print(resampled_tia_map.GetSpacing())
 
     sitk.WriteImage(resampled_tia_map, output_path)
-    print('Resampled image saved in:', output_path)
+    print('Resampled TIA map saved in:', output_path)
 
 
 

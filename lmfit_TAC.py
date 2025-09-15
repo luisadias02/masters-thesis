@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.integrate import quad
 
 #A0_administered = 6783 #MBq for p1
-A0_administered = 6810 #MBq for p8
+#A0_administered = 6810 #MBq for p8
 
 
 def triexponential_tac(t:float, k1:float, k2:float, k3:float, A2:float, A3:float):
@@ -121,7 +121,7 @@ def calculate_r2(y_real, y_predicted):
     r2 = 1 - (ss_res / ss_tot)
     return r2
 
-def total_computation(dict_total:dict):
+def total_computation(dict_total:dict, A0_administered:float):
 
     """
     performs the fit to each VOI, for real and simulated (SIMIND) activity data and 
@@ -134,7 +134,6 @@ def total_computation(dict_total:dict):
     Returns:
     - The data frame containing k1, k2, k3, A1, A2, A3 fitted for each VOI;
     - A dictionary of the cumulated activities (in MBq*s)
-
     """
 
     results=[]
