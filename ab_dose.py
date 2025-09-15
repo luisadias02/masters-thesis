@@ -81,7 +81,7 @@ def kernel_computation():
 def convolution(tia_map: sitk.Image, kernel: np.array, path:str, A0_administered:float):
 
     """
-    performs the convolution of the TIA map and the Dose Voxel Kernel, via FFT convolution.
+    performs the convolution of the TIA map and the Dose Voxel Kernel (DVK), via FFT convolution.
 
     Returns:
         - the absorbed dose map (in mGy/MBq)
@@ -106,7 +106,7 @@ def convolution(tia_map: sitk.Image, kernel: np.array, path:str, A0_administered
 def statistics(ab_dose_map:np.array, resampled_seg:np.array, path:str):
 
     """
-    Computes the dose statistics from the generated absorbed dose maps. 
+    Computes the dose statistics from the generated normalized absorbed dose maps. 
     """
         
     values= np.unique(resampled_seg)

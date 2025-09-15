@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.integrate import quad
 
 #A0_administered = 6783 #MBq for p1
-#A0_administered = 6810 #MBq for p8
+#A0_administered = 6810 #MBq for p2
 
 
 def triexponential_tac(t:float, k1:float, k2:float, k3:float, A2:float, A3:float):
