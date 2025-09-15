@@ -3,7 +3,6 @@ import functions
 import lmfit_TAC
 import tia_maps
 import ab_dose
-import ab_dose
 import os
 
 """
@@ -16,7 +15,6 @@ Absorbed dose is then determined by FFT convolution with a Dose Voxel Kernel (VD
 
 def input_files(original_path:str, simind_path:str):
     img_or= functions.read_dicom(original_path)
-    img_sim= functions.read_dicom(simind_path)
     img_sim= functions.read_dicom(simind_path)
     return img_or, img_sim
 
@@ -50,8 +48,6 @@ def abdose_calc(tia_path:str, seg_path:str, output_map_path:str, output_path_sta
     ab_dose.statistics(abdose_map, resampled_seg, output_path_statistics)
 
 
-
-
 def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path:str, output_path:str, administered_activity:float):
 
     img_or, img_sim= input_files(original_24h_path, simulated_24h_path)
@@ -66,7 +62,6 @@ def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path
 
     abdose_calc(tia_or_path, seg_path, os.path.join(output_path, 'abdose_map_or.nrrd'), os.path.join(output_path, 'dose_statistics_or.txt'), administered_activity)
     abdose_calc(tia_sim_path, seg_path, os.path.join(output_path, 'abdose_map_sim.nrrd'), os.path.join(output_path, 'dose_statistics_sim.txt'), administered_activity)
-
 
 
 
