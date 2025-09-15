@@ -10,6 +10,6 @@ Some important notes:
 - The generated absorbed dose maps are normalized to the injected activity. If one wishes to override this, the administred activity value can be set to 1.
 The generated Y-Scale in the TACs will correspond to absolute values of activity (MBq/100).
 - The Dose Voxel Kernel (VDK) is generated with S-Values obtained for 2.21mm voxel size, 177Lu and Soft-Tissue;
-- The original TIA maps and their respective resampling to a 2.21mm voxel are saved;
+- The TIA maps and their respective resampling to a 2.21mm voxel are saved;
 - Consequentely, the generated absorbed dose maps also have 2.21mm cubic voxels. 
   
