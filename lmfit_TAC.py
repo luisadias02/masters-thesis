@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from lmfit import Model
 import pandas as pd
 from scipy.integrate import quad
+import os
 
 #A0_administered = 6783 #MBq for p1
 #A0_administered = 6810 #MBq for p2
@@ -121,7 +122,7 @@ def calculate_r2(y_real, y_predicted):
     r2 = 1 - (ss_res / ss_tot)
     return r2
 
-def total_computation(dict_total:dict, A0_administered:float):
+def total_computation(dict_total:dict, A0_administered:float, output_path:str):
 
     """
     performs the fit to each VOI, for real and simulated (SIMIND) activity data and 
@@ -130,6 +131,10 @@ def total_computation(dict_total:dict, A0_administered:float):
     Args:
         dict_total (dict):  dictionary whose keys are the VOIs name and the value 
                             is another dictionary with the activity in each time point.
+        
+        A0_administered (float): injected activity (MBq)
+
+        output_path (str): path to the folder where output files are saved
 
     Returns:
     - The data frame containing k1, k2, k3, A1, A2, A3 fitted for each VOI;
@@ -138,129 +143,136 @@ def total_computation(dict_total:dict, A0_administered:float):
 
     results=[]
     dicts_cumulated= {}
+    with open(os.path.join(output_path, 'cumulated_activities.txt'), 'w') as f:
 
-    for voi in dict_total.keys():
+        for voi in dict_total.keys():
 
-        original= dict_total[voi][0]
-        simulated= dict_total[voi][1]
+            original= dict_total[voi][0]
+            simulated= dict_total[voi][1]
 
-        t_data_or, y_data_or, sigma_or = prepare_data(original)
-        t_data_sim, y_data_sim, sigma_sim = prepare_data(simulated)
+            t_data_or, y_data_or, sigma_or = prepare_data(original)
+            t_data_sim, y_data_sim, sigma_sim = prepare_data(simulated)
 
-        time_points = np.array([0, 4, 24, 144, 200]) #for plotting
-        t_fit = np.linspace(time_points.min(), time_points.max(), 100)
+            time_points = np.array([0, 4, 24, 144, 200]) #for plotting
+            t_fit = np.linspace(time_points.min(), time_points.max(), 100)
 
-        result_or= triexponential_tac_computation(original, plot=False, voi= voi)
-        result_sim= triexponential_tac_computation(simulated, plot=False, voi= voi)
+            result_or= triexponential_tac_computation(original, plot=False, voi= voi)
+            result_sim= triexponential_tac_computation(simulated, plot=False, voi= voi)
 
-        k1_or, k2_or, k3_or, A2_or, A3_or = extract_values(result_or)  
-        A1_or= A2_or + A3_or
-        activity_or= integration(k1_or, k2_or, k3_or, A1_or, A2_or, A3_or)
+            k1_or, k2_or, k3_or, A2_or, A3_or = extract_values(result_or)  
+            A1_or= A2_or + A3_or
+            activity_or= integration(k1_or, k2_or, k3_or, A1_or, A2_or, A3_or)
 
-        k1_sim, k2_sim, k3_sim, A2_sim, A3_sim  = extract_values(result_sim) 
-        A1_sim= A2_sim + A3_sim
-        activity_sim= integration(k1_sim, k2_sim, k3_sim, A1_sim, A2_sim, A3_sim)
+            k1_sim, k2_sim, k3_sim, A2_sim, A3_sim  = extract_values(result_sim) 
+            A1_sim= A2_sim + A3_sim
+            activity_sim= integration(k1_sim, k2_sim, k3_sim, A1_sim, A2_sim, A3_sim)
 
-        fit_or = -A1_or * np.exp(-k1_or * t_fit) + A2_or * np.exp(-k2_or * t_fit) + A3_or * np.exp(-k3_or * t_fit)
-        fit_sim = -A1_sim * np.exp(-k1_sim * t_fit) + A2_sim * np.exp(-k2_sim * t_fit) + A3_sim * np.exp(-k3_sim * t_fit)
+            fit_or = -A1_or * np.exp(-k1_or * t_fit) + A2_or * np.exp(-k2_or * t_fit) + A3_or * np.exp(-k3_or * t_fit)
+            fit_sim = -A1_sim * np.exp(-k1_sim * t_fit) + A2_sim * np.exp(-k2_sim * t_fit) + A3_sim * np.exp(-k3_sim * t_fit)
 
-        y_pred_or = -A1_or * np.exp(-k1_or * t_data_or[:-1]) + A2_or * np.exp(-k2_or * t_data_or[:-1]) + A3_or * np.exp(-k3_or * t_data_or[:-1])
-        y_pred_sim = -A1_sim * np.exp(-k1_sim * t_data_sim[:-1]) + A2_sim * np.exp(-k2_sim * t_data_sim[:-1]) + A3_sim * np.exp(-k3_sim * t_data_sim[:-1])
-        r2_or = calculate_r2(y_data_or[:-1], y_pred_or)
-        r2_sim = calculate_r2(y_data_sim[:-1], y_pred_sim)
+            y_pred_or = -A1_or * np.exp(-k1_or * t_data_or[:-1]) + A2_or * np.exp(-k2_or * t_data_or[:-1]) + A3_or * np.exp(-k3_or * t_data_or[:-1])
+            y_pred_sim = -A1_sim * np.exp(-k1_sim * t_data_sim[:-1]) + A2_sim * np.exp(-k2_sim * t_data_sim[:-1]) + A3_sim * np.exp(-k3_sim * t_data_sim[:-1])
+            r2_or = calculate_r2(y_data_or[:-1], y_pred_or)
+            r2_sim = calculate_r2(y_data_sim[:-1], y_pred_sim)
 
-        results.append({
-            'VOI': voi,
-            'k1 original': float(k1_or),
-            'k2 original': float(k2_or),
-            'k3 original': float(k3_or),
-            'A1 original': float(A1_or),
-            'A2 original': float(A2_or),
-            'A3 original': float(A3_or),
-            'R2 original': float(r2_or),
-            'k1 simulated': float(k1_sim),
-            'k2 simulated': float(k2_sim),
-            'k3 simulated': float(k3_sim),
-            'A1 simulated': float(A1_sim),
-            'A2 simulated': float(A2_sim),
-            'A3 simulated': float(A3_sim),
-            'R2 simulated': float(r2_sim),
-        })
+            results.append({
+                'VOI': voi,
+                'k1 original': float(k1_or),
+                'k2 original': float(k2_or),
+                'k3 original': float(k3_or),
+                'A1 original': float(A1_or),
+                'A2 original': float(A2_or),
+                'A3 original': float(A3_or),
+                'R2 original': float(r2_or),
+                'k1 simulated': float(k1_sim),
+                'k2 simulated': float(k2_sim),
+                'k3 simulated': float(k3_sim),
+                'A1 simulated': float(A1_sim),
+                'A2 simulated': float(A2_sim),
+                'A3 simulated': float(A3_sim),
+                'R2 simulated': float(r2_sim),
+            })
 
-        plt.style.use('seaborn-v0_8-whitegrid')
-        plt.rcParams.update({
-            'font.size': 14,
-            'axes.labelsize': 16,
-            'axes.titlesize': 18,
-            'legend.fontsize': 12,
-            'xtick.labelsize': 12,
-            'ytick.labelsize': 12,
-            'lines.linewidth': 2,
-            'lines.markersize': 8
-        })
+            plt.style.use('seaborn-v0_8-whitegrid')
+            plt.rcParams.update({
+                'font.size': 14,
+                'axes.labelsize': 16,
+                'axes.titlesize': 18,
+                'legend.fontsize': 12,
+                'xtick.labelsize': 12,
+                'ytick.labelsize': 12,
+                'lines.linewidth': 2,
+                'lines.markersize': 8
+            })
 
-        soft_orange = '#fc8d62'   
-        soft_green = '#005000'     
+            soft_orange = '#fc8d62'   
+            soft_green = '#005000'     
 
-        fig, ax = plt.subplots(figsize=(7, 5))
+            fig, ax = plt.subplots(figsize=(7, 5))
 
-        ax.errorbar(
-            t_data_or[:-1], 
-            100 * y_data_or[:-1] / A0_administered,
-            yerr=100 * sigma_or[:-1] / A0_administered,
-            fmt='o', 
-            color=soft_green,
-            ecolor=soft_green,
-            elinewidth=1.5,
-            capsize=4,
-            #label=f'{voi} original data'
-        )
+            ax.errorbar(
+                t_data_or[:-1], 
+                100 * y_data_or[:-1] / A0_administered,
+                yerr=100 * sigma_or[:-1] / A0_administered,
+                fmt='o', 
+                color=soft_green,
+                ecolor=soft_green,
+                elinewidth=1.5,
+                capsize=4,
+                #label=f'{voi} original data'
+            )
 
-        ax.errorbar(
-            t_data_sim[:-1], 
-            100 * y_data_sim[:-1] / A0_administered,
-            yerr=100 * sigma_sim[:-1] / A0_administered,
-            fmt='s',
-            color=soft_orange,
-            ecolor=soft_orange,
-            elinewidth=1.5,
-            capsize=4,
-            label=f'{voi} simulated data'
-        )
+            ax.errorbar(
+                t_data_sim[:-1], 
+                100 * y_data_sim[:-1] / A0_administered,
+                yerr=100 * sigma_sim[:-1] / A0_administered,
+                fmt='s',
+                color=soft_orange,
+                ecolor=soft_orange,
+                elinewidth=1.5,
+                capsize=4,
+                label=f'{voi} simulated data'
+            )
 
-        ax.plot(
-            t_fit, 
-            100 * fit_or / A0_administered, 
-            '-', 
-            color=soft_green,
-            label=f'{voi} original fit'
-        )
+            ax.plot(
+                t_fit, 
+                100 * fit_or / A0_administered, 
+                '-', 
+                color=soft_green,
+                label=f'{voi} original fit'
+            )
 
-        ax.plot(
-            t_fit, 
-            100 * fit_sim / A0_administered, 
-            '--',
-            color=soft_orange,
-            label=f'{voi} simulated fit'
-        )
+            ax.plot(
+                t_fit, 
+                100 * fit_sim / A0_administered, 
+                '--',
+                color=soft_orange,
+                label=f'{voi} simulated fit'
+            )
 
-        ax.set_title(f'TAC Fit for {voi}')
-        ax.set_xlabel('Time post-injection (h)')
-        ax.set_ylabel('% of Injected Activity')
+            ax.set_title(f'TAC Fit for {voi}')
+            ax.set_xlabel('Time post-injection (h)')
+            ax.set_ylabel('% of Injected Activity')
 
-        ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-        ax.set_axisbelow(True)
+            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+            ax.set_axisbelow(True)
 
-        plt.tight_layout()
-        plt.show()
+            plt.tight_layout()
+            plt.show()
 
-        print(voi)
-        print('Original activity:', round(activity_or, 2), 'MBq*h')
-        print('Simulated activity:', round(activity_sim, 2), 'MBq*h')
-        print('Difference(%):', round(100*((activity_sim-activity_or)/activity_or), 2))
+            
+            print(voi)
+            print('Original activity:', round(activity_or, 2), 'MBq*h')
+            print('Simulated activity:', round(activity_sim, 2), 'MBq*h')
+            print('Difference(%):', round(100*((activity_sim-activity_or)/activity_or), 2))
 
-        dicts_cumulated[voi] = [(activity_or) * 3600, (activity_sim) * 3600] #CONVERSION FROM MBq*h TO MBq*s
+            f.write(voi)
+            f.write(f' original: {round(activity_or, 2)} MBq*h \n')
+            f.write(f' simulated: {round(activity_sim, 2)} MBq*h \n')
+            f.write(f' difference (%): {round(100*((activity_sim-activity_or)/activity_or), 2)} \n\n')
 
+
+            dicts_cumulated[voi] = [(activity_or) * 3600, (activity_sim) * 3600] #CONVERSION FROM MBq*h TO MBq*s
 
     df = pd.DataFrame(results)
     print('\n', df)

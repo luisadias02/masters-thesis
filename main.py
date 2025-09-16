@@ -12,14 +12,13 @@ Absorbed dose is then determined by FFT convolution with a Dose Voxel Kernel (VD
 
 """
 
-
 def input_files(original_path:str, simind_path:str):
     img_or= functions.read_dicom(original_path)
     img_sim= functions.read_dicom(simind_path)
     return img_or, img_sim
 
-def tac_computation(dict_vois:dict, img_24h: sitk.Image, activity_admin:float):
-    df, dicts_cumulated= lmfit_TAC.total_computation(dict_vois, activity_admin)
+def tac_computation(dict_vois:dict, img_24h: sitk.Image, activity_admin:float, output_path:str):
+    df, dicts_cumulated= lmfit_TAC.total_computation(dict_vois, activity_admin, output_path)
     print(dicts_cumulated)
     dict_rescaled= lmfit_TAC.dict_conversion(dicts_cumulated, 
                                             pixel_size= img_24h.GetSpacing())
@@ -66,7 +65,7 @@ def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path
 
     img_or, img_sim= input_files(original_24h_path, simulated_24h_path)
 
-    dict_rescaled= tac_computation(dict_vois, img_or, administered_activity)
+    dict_rescaled= tac_computation(dict_vois, img_or, administered_activity, output_path)
 
     tia_maps_generation(original_24h_path, seg_path, dict_rescaled, output_path, sim=False)
     tia_maps_generation(simulated_24h_path, seg_path, dict_rescaled, output_path, sim=True)
