@@ -73,8 +73,13 @@ def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path
     tia_or_path= os.path.join(output_path, 'tia_map_or_2p21.nrrd')    
     tia_sim_path= os.path.join(output_path, 'tia_map_sim_2p21.nrrd')
 
-    abdose_calc(tia_or_path, seg_path, os.path.join(output_path, 'abdose_map_or.nrrd'), os.path.join(output_path, 'dose_statistics_or.txt'), administered_activity)
-    abdose_calc(tia_sim_path, seg_path, os.path.join(output_path, 'abdose_map_sim.nrrd'), os.path.join(output_path, 'dose_statistics_sim.txt'), administered_activity)
+    abdose_or= abdose_calc(tia_or_path, seg_path, os.path.join(output_path, 'abdose_map_or.nrrd'), os.path.join(output_path, 'dose_statistics_or.txt'), administered_activity)
+    abdose_sim=abdose_calc(tia_sim_path, seg_path, os.path.join(output_path, 'abdose_map_sim.nrrd'), os.path.join(output_path, 'dose_statistics_sim.txt'), administered_activity)
+
+    ab_dose.setup_latex()
+    ab_dose.dvh(os.path.join(output_path, 'abdose_map_or.nrrd'), os.path.join(output_path, 'abdose_map_sim.nrrd'), seg_path, administered_activity )
+
+    
 
 
 
