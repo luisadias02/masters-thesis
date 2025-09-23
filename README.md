@@ -2,8 +2,9 @@ In this repository, the developed code for the **dosimetry** of 177Lu patients i
 
 - This code was created as part of my masters thesis, where patients treated with 177Lu (specifically PSMA) were analyzed;
 - Two sets of data (real and simulated) are studied, to ultimately be compared;
+- The entire workflow is run in the *run_main.ipynb* file
 
-Some important notes:
+About the code:
 
 - The volumes (real and simulated) need to be aligned, as well as the segmentation;
 - 5 time-points are needed, with one of them being the (0,0), i.e. the activity in the VOI at injection-time is zero. If less are given, the script does not run and an error is presented;
