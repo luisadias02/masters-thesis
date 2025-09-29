@@ -22,7 +22,16 @@ def read_images(activity_map_path:str, seg_path:str):
 
     return tia_map_image, seg_image, resampled_seg
 
-def read_resample(seg_path, recon_path):
+def read_resample(seg_path:str, recon_path:str):
+
+    """"
+    Resamples the provided segmentation to the dimensions of the absorbed dose map. 
+
+    Args:
+        - seg_path (str) : path to the original segmentation.
+        - recon_path (str) : path to the absorbed dose map.
+    
+    """
 
     def read_dicom(path):
         image= functions.read_dicom(path)
@@ -30,9 +39,7 @@ def read_resample(seg_path, recon_path):
         print(image.GetSpacing())
         return image
     
-    print('spect matrix:')
     image_recon= read_dicom(recon_path)
-    print('initial segmentation matrix:')
     image_seg= read_dicom(seg_path)  
 
     def resample_seg(image_recon, image_seg):
@@ -62,6 +69,7 @@ def kernel_computation():
 
     data = np.loadtxt("s_values_lu177_2p21.txt", delimiter='\t', skiprows=2) 
     # this kernel corresponds to the 2.21 mm voxel size, for 177Lu in soft tissue.
+    #The kernel S-Values are in mGy/(MBq*s)
 
     s_values = data[:, 3]
     dim = int(round(len(s_values) ** (1/3)))
@@ -82,17 +90,18 @@ def kernel_computation():
 def convolution(tia_map: sitk.Image, kernel: np.array, path:str, A0_administered:float):
 
     """
-    performs the convolution of the TIA map and the Dose Voxel Kernel (DVK), via FFT convolution.
+    performs the convolution of the TIA map (MBq*s) and the Dose Voxel Kernel (DVK), via FFT convolution.
 
     Returns:
         - the absorbed dose map (in mGy/MBq)
     """
 
     image_spacing= tia_map.GetSpacing()
-    np_tia_map = sitk.GetArrayFromImage(tia_map)*(image_spacing[0]*image_spacing[1]*image_spacing[2]*(1e-3))/A0_administered# normalization to the administred activity
+    #conversion to MBq*s and normalization to the administered activity (MBq)
+    np_tia_map = sitk.GetArrayFromImage(tia_map)*(image_spacing[0]*image_spacing[1]*image_spacing[2]*(1e-3))/A0_administered 
     print('TIA map shape:', np_tia_map.shape)
 
-    ab_dose_map = signal.fftconvolve(np_tia_map, kernel, mode='same') # the result of the convolution has the 
+    ab_dose_map = signal.fftconvolve(np_tia_map, kernel, mode='same') # the convolution result has the 
     print('Dose map shape:', ab_dose_map.shape)                       # same dimensions of the TIA map
 
     ab_dose_image= sitk.GetImageFromArray(ab_dose_map)
@@ -107,14 +116,20 @@ def convolution(tia_map: sitk.Image, kernel: np.array, path:str, A0_administered
 def statistics(ab_dose_map:np.array, resampled_seg:np.array, path:str):
 
     """
-    Computes the dose statistics from the generated normalized absorbed dose maps. 
+    Computes the dose statistics from the generated normalized absorbed dose maps (mGy/MBq). 
+    The mean, median, minimum and maximum values are saved in a .txt file for each VOI.
+
+    Args:
+        - ab_dose_map (np.array) : the absorbed dose map array;
+        - resampled_seg (np.array) : the resampled segmentation registred to the map;
+        - path (str) : path to the .txt file to be saved wit the statistics.
     """
         
     values= np.unique(resampled_seg)
-    keys= {1:'spleen', 2:'right kidney', 3:'left kidney', 5:'liver', 22:'tumor1', 23:'tumor2'} #segmentation keys, if TotalSegmentator is used
+    keys= {1:'spleen', 2:'right kidney', 3:'left kidney', 5:'liver', 22:'tumor1', 23:'tumor2'} #segmentation keys if TotalSegmentator is used
 
     with open(path, 'w') as f:
-        for value in values[1:]:
+        for value in values[1:]: #0 is the background
             if value != 21 and value != 28:
                 f.write(f'Segmentation value: {value} ({keys[value]})\n')
                     
@@ -141,7 +156,19 @@ def statistics(ab_dose_map:np.array, resampled_seg:np.array, path:str):
 
 
 
-def dvh(abdose_or_path: str, abdose_sim_path: str, seg_path: str, injected_activity: float):
+def dvh(abdose_or_path: str, abdose_sim_path: str, seg_path: str, injected_activity: float, output_path:str):
+
+    """
+    Generates the real and simulated DVH plots for the VOIs, in mGy. X-limits are set for the healthy
+    organs but can eventually be changed. 
+
+    Args:
+        - abdose_or_path (str) : path to the real absorbed dose map;
+        - abdose_sim_path (str) : path to the simulated absorbed dose map;
+        - seg_path (str) : path to the aligned segmentation;
+        - injected
+    
+    """
 
     abdose_or = sitk.GetArrayFromImage(functions.read_dicom(abdose_or_path)) * injected_activity  # mGy
     abdose_sim = sitk.GetArrayFromImage(functions.read_dicom(abdose_sim_path)) * injected_activity
@@ -163,25 +190,15 @@ def dvh(abdose_or_path: str, abdose_sim_path: str, seg_path: str, injected_activ
     for value in np.unique(resampled_seg_or):
         if value != 21 and value != 0 and value != 28 and value in keys:
             mask_or = (resampled_seg_or == value)
-            mask_sim = (resampled_seg_sim == value)
             dose_or = abdose_or[mask_or]
+
+            mask_sim = (resampled_seg_sim == value)
             dose_sim = abdose_sim[mask_sim]
+
             if len(dose_or) > 0 and len(dose_sim) > 0:
                 valid_organs.append(value)
     
-    # Calculate subplot layout
-    n_organs = len(valid_organs)
-    if n_organs == 0:
-        return
-    
-    ncols = 3  
-    nrows = (n_organs + ncols - 1) // ncols  
-    
-    # Create subplots
-    fig, axes = plt.subplots(nrows, ncols, figsize=(15, 5*nrows))
-    if nrows == 1:
-        axes = axes.reshape(1, -1) 
-    
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
     axes_flat = axes.flatten()
     
     for idx, value in enumerate(valid_organs):
@@ -193,9 +210,13 @@ def dvh(abdose_or_path: str, abdose_sim_path: str, seg_path: str, injected_activ
         dose_sim = abdose_sim[mask_sim]
         
         dose_bins = np.linspace(0, max(dose_or.max(), dose_sim.max()), 200)
+
+        #original data
         hist_or, bin_edges = np.histogram(dose_or, bins=dose_bins)
         cum_or = np.cumsum(hist_or[::-1])[::-1]
         rel_or = cum_or / cum_or[0] if cum_or[0] > 0 else cum_or
+
+        #simulated data
         hist_sim, _ = np.histogram(dose_sim, bins=dose_bins)
         cum_sim = np.cumsum(hist_sim[::-1])[::-1]
         rel_sim = cum_sim / cum_sim[0] if cum_sim[0] > 0 else cum_sim
@@ -229,17 +250,16 @@ def dvh(abdose_or_path: str, abdose_sim_path: str, seg_path: str, injected_activ
             ax.set_xlim(0, max(dose_or.max(), dose_sim.max()) * 1.05)
         ax.set_ylim(0, 1.05)
     
-    for idx in range(n_organs, len(axes_flat)):
+    for idx in range(6, len(axes_flat)):
         axes_flat[idx].set_visible(False)
     
     plt.tight_layout()
 
-    plt.savefig('dvh_plots_p2_1.pdf', format='pdf', dpi=300, bbox_inches='tight')
+    plt.savefig(output_path, format='pdf', dpi=300, bbox_inches='tight')
     plt.show()
 
 
 def setup_latex():
-    """Use this if you don't have LaTeX installed but want similar styling"""
     plt.rcParams.update({
         "text.usetex": False,
         "font.family": "serif",

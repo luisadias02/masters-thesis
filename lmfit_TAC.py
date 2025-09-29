@@ -125,8 +125,9 @@ def calculate_r2(y_real, y_predicted):
 def total_computation(dict_total:dict, A0_administered:float, output_path:str):
 
     """
-    performs the fit to each VOI, for real and simulated (SIMIND) activity data and 
-    time points. 
+    Performs the fit to each VOI, for real and simulated (SIMIND) activity data and 
+    time points. Saves the cumulated ativities in a .txt file, computing the percentual 
+    differences. 
 
     Args:
         dict_total (dict):  dictionary whose keys are the VOIs name and the value 
@@ -284,7 +285,8 @@ def total_computation(dict_total:dict, A0_administered:float, output_path:str):
 def dict_conversion(dict_total:dict, pixel_size:tuple):
 
     """
-    conversion of the integrated activity values from MBq*s to MBq*s/mL
+    Conversion of the integrated activity values from MBq*s to MBq*s/mL. The simulated and real volumes
+    are assumed to have the same voxel spacing. 
     
     """
 

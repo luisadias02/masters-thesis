@@ -80,7 +80,8 @@ def product(np_image: np.ndarray, np_seg: np.ndarray):
 def map_computation(dict_cumulated: dict, masks: dict, volume_path: str, output_path: str, index):
 
     """
-    computes the 3D cumulated activity map.
+    Computes the 3D cumulated activity map. The map is computed based on the the 
+    cumulated activity value, which was distributed within the normalized VOIs. 
 
     Args:
         dict_cumulated (dict): dictionary of the total cumulated activity per VOI.
@@ -88,8 +89,7 @@ def map_computation(dict_cumulated: dict, masks: dict, volume_path: str, output_
         volume_path (str): image path to retrieve the metadata info for volume saving.
 
     Returns:
-        - the created map path
-    
+        - the created map path (str)
     """
 
     keys= {1:'spleen', 2:'right kidney', 3:'left kidney', 5:'liver', 21:'bladder', 22:'tumor1', 23:'tumor2', 0:'remaining'} #segmentation keys - if TotalSegmentator is used
@@ -113,7 +113,8 @@ def map_computation(dict_cumulated: dict, masks: dict, volume_path: str, output_
 def resampling_2p21(tia_map_path:str, output_path: str):
 
     """
-    resamples the 3D cumulated activity map to a 2.21mm voxel size.
+    Resamples the 3D cumulated activity map to a 2.21mm sized cubic voxel. The map is 
+    saved in the output path folder.
 
     Args:
         tia_map_path (str): path for the cumulated activity map to resample.

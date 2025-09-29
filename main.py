@@ -6,8 +6,9 @@ import ab_dose
 import os
 
 """
-This file contains the main workflow for dosimetry for 177Lu patients. 
-It involves the computation of the TACs, followed by the generation of the cumulated activity maps. 
+This file contains the main workflow for dosimetry with the 177Lu patients. 
+It involves the computation of the TACs, followed by the generation of the time-integrated
+activity maps. 
 Absorbed dose is then determined by FFT convolution with a Dose Voxel Kernel (VDK).
 
 """
@@ -47,19 +48,20 @@ def abdose_calc(tia_path:str, seg_path:str, output_map_path:str, output_path_sta
     ab_dose.statistics(abdose_map, resampled_seg, output_path_statistics)
 
 
-def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path:str, output_path:str, administered_activity:float):
+def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path:str, 
+         output_path:str, administered_activity:float):
 
     """
     This is the main function, responsible for executing the entire dosimetry workflow. To accurately compare the real and
-    simulated absorbed doses the volumes need to be aligned between each other and with the segmentation.
+    simulated absorbed doses the volumes need to be aligned with each other and with the segmentation.
 
     Args:
-    - dict_vois (dict): dictionary with the real and simulated activities per VOI for each time-point. 
-    - original_24_path (str): path to the original 24h .nii or .nrrd file
-    - original_24_path (str): path to the simulated 24h .nii or .nrrd file
-    - seg_path (str): path to the aligned segmentation 
-    - output_path (str): path to the main folder to save the files (all the files will be saved in this folder)
-    - administered_activity (float): injected activity (MBq)
+        - dict_vois (dict) : dictionary with the real and simulated activities per VOI for each time-point. 
+        - original_24_path (str) : path to the original 24h .nii or .nrrd file
+        - original_24_path (str) : path to the simulated 24h .nii or .nrrd file
+        - seg_path (str) : path to the aligned segmentation 
+        - output_path (str) : path to the main folder to save the files (all generated files will be saved in this folder)
+        - administered_activity (float) : injected activity (MBq)
 
     """
 
@@ -73,11 +75,15 @@ def main(dict_vois:dict, original_24h_path:str, simulated_24h_path:str, seg_path
     tia_or_path= os.path.join(output_path, 'tia_map_or_2p21.nrrd')    
     tia_sim_path= os.path.join(output_path, 'tia_map_sim_2p21.nrrd')
 
-    abdose_or= abdose_calc(tia_or_path, seg_path, os.path.join(output_path, 'abdose_map_or.nrrd'), os.path.join(output_path, 'dose_statistics_or.txt'), administered_activity)
-    abdose_sim=abdose_calc(tia_sim_path, seg_path, os.path.join(output_path, 'abdose_map_sim.nrrd'), os.path.join(output_path, 'dose_statistics_sim.txt'), administered_activity)
+    abdose_or= abdose_calc(tia_or_path, seg_path, os.path.join(output_path, 'abdose_map_or.nrrd'), 
+                           os.path.join(output_path, 'dose_statistics_or.txt'), administered_activity)
+    abdose_sim=abdose_calc(tia_sim_path, seg_path, os.path.join(output_path, 'abdose_map_sim.nrrd'), 
+                           os.path.join(output_path, 'dose_statistics_sim.txt'), administered_activity)
 
     ab_dose.setup_latex()
-    ab_dose.dvh(os.path.join(output_path, 'abdose_map_or.nrrd'), os.path.join(output_path, 'abdose_map_sim.nrrd'), seg_path, administered_activity )
+    ab_dose.dvh(os.path.join(output_path, 'abdose_map_or.nrrd'), 
+                os.path.join(output_path, 'abdose_map_sim.nrrd'), seg_path, administered_activity, 
+                os.path.join(output_path, 'dvh_plots.pdf') )
 
     
 
