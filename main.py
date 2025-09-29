@@ -9,8 +9,8 @@ import os
 This file contains the main workflow for dosimetry with the 177Lu patients. 
 It involves the computation of the TACs, followed by the generation of the time-integrated
 activity maps. 
-Absorbed dose is then determined by FFT convolution with a Dose Voxel Kernel (VDK).
-
+Absorbed dose is then determined by FFT convolution with a Dose Voxel Kernel (VDK). 
+DVH plots are generated for real and simulated VOIs.  
 """
 
 def input_files(original_path:str, simind_path:str):
