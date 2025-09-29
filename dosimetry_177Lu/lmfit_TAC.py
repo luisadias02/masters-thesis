@@ -125,8 +125,9 @@ def calculate_r2(y_real, y_predicted):
 def total_computation(dict_total:dict, A0_administered:float, output_path:str):
 
     """
-    performs the fit to each VOI, for real and simulated (SIMIND) activity data and 
-    time points. 
+    Performs the fit to each VOI, for real and simulated (SIMIND) activity data and 
+    time points. Saves the cumulated ativities in a .txt file, computing the percentual 
+    differences. 
 
     Args:
         dict_total (dict):  dictionary whose keys are the VOIs name and the value 
@@ -143,103 +144,37 @@ def total_computation(dict_total:dict, A0_administered:float, output_path:str):
 
     results=[]
     dicts_cumulated= {}
-
     with open(os.path.join(output_path, 'cumulated_activities.txt'), 'w') as f:
+
         for voi in dict_total.keys():
-            print(f"Processing VOI: {voi}")
-    
+
+            original= dict_total[voi][0]
+            simulated= dict_total[voi][1]
+
+            t_data_or, y_data_or, sigma_or = prepare_data(original)
+            t_data_sim, y_data_sim, sigma_sim = prepare_data(simulated)
+
             time_points = np.array([0, 4, 24, 144, 200]) #for plotting
             t_fit = np.linspace(time_points.min(), time_points.max(), 100)
 
-            best_i = 600
-            best_R2_mean = -1  # Start with -1 since R² can be negative
-            best_or_params = (0, 0, 0, 0, 0)
-            best_sim_params = (0, 0, 0, 0, 0)
-            best_r2_or=0
-            best_r2_sim=0
-            
-            original_base = dict_total[voi][0]
-            simulated_base = dict_total[voi][1]
-            t_data_or_base, y_data_or_base, sigma_or_base = prepare_data(original_base)
-            t_data_sim_base, y_data_sim_base, sigma_sim_base = prepare_data(simulated_base)
-            
-            # Loop through time points to find optimal fit
-            for i in range(600, 100001, 10):  # More explicit range
-                try:
-                    # Prepare original data with current time point
-                    t_data_or = np.append(t_data_or_base, i)
-                    y_data_or = np.append(y_data_or_base, 0)
-                    sigma_or = np.append(sigma_or_base, 1e-4)
-                    
-                    original = {}
-                    for index in range(len(t_data_or)):
-                        t = t_data_or[index]
-                        original[t] = [y_data_or[index], sigma_or[index]]
-                    
-                    # Prepare simulated data with current time point
-                    t_data_sim = np.append(t_data_sim_base, i)
-                    y_data_sim = np.append(y_data_sim_base, 0)
-                    sigma_sim = np.append(sigma_sim_base, 1e-4)
-                    
-                    simulated = {}
-                    for index in range(len(t_data_sim)):
-                        t = t_data_sim[index]
-                        simulated[t] = [y_data_sim[index], sigma_sim[index]]
-                    
-                    # Perform triexponential fitting
-                    result_or = triexponential_tac_computation(original, plot=False, voi=voi)
-                    result_sim = triexponential_tac_computation(simulated, plot=False, voi=voi)
-                    
-                    # Extract parameters
-                    k1_or, k2_or, k3_or, A2_or, A3_or = extract_values(result_or)
-                    A1_or = A2_or + A3_or
-                    
-                    k1_sim, k2_sim, k3_sim, A2_sim, A3_sim = extract_values(result_sim)
-                    A1_sim = A2_sim + A3_sim
+            result_or= triexponential_tac_computation(original, plot=False, voi= voi)
+            result_sim= triexponential_tac_computation(simulated, plot=False, voi= voi)
 
-                    fit_or = -A1_or * np.exp(-k1_or * t_fit) + A2_or * np.exp(-k2_or * t_fit) + A3_or * np.exp(-k3_or * t_fit)
-                    fit_sim = -A1_sim * np.exp(-k1_sim * t_fit) + A2_sim * np.exp(-k2_sim * t_fit) + A3_sim * np.exp(-k3_sim * t_fit)
-
-                    
-                    y_pred_or = (-A1_or * np.exp(-k1_or * t_data_or[:-1]) + 
-                                A2_or * np.exp(-k2_or * t_data_or[:-1]) + 
-                                A3_or * np.exp(-k3_or * t_data_or[:-1]))
-                    
-                    y_pred_sim = (-A1_sim * np.exp(-k1_sim * t_data_sim[:-1]) + 
-                                 A2_sim * np.exp(-k2_sim * t_data_sim[:-1]) + 
-                                 A3_sim * np.exp(-k3_sim * t_data_sim[:-1]))
-                    
-                    r2_or = calculate_r2(y_data_or[:-1], y_pred_or)
-                    r2_sim = calculate_r2(y_data_sim[:-1], y_pred_sim)
-                    r2_mean_i = (r2_or + r2_sim) / 2
-                    
-                    # Update best parameters if this is better
-                    if r2_mean_i > best_R2_mean:
-                        best_i = i
-                        best_R2_mean = r2_mean_i
-                        best_or_params = (k1_or, k2_or, k3_or, A2_or, A3_or)
-                        best_sim_params = (k1_sim, k2_sim, k3_sim, A2_sim, A3_sim)
-                        best_r2_or= r2_or
-                        best_r2_sim=r2_sim
-                    
-                    # Optional: Early stopping if R² is very good
-                    if r2_mean_i > 0.9999:
-                        print(f"  Fit achieved at i={i} with R²={r2_mean_i:.6f}")
-                        break
-                        
-                except Exception as e:
-                    print(f"  Error at i={i}: {str(e)}")
-                    continue
-            
-            print(f"  Best fit: i={best_i}, R²={best_R2_mean:.6f}")
-
-            k1_or, k2_or, k3_or, A2_or, A3_or = best_or_params
+            k1_or, k2_or, k3_or, A2_or, A3_or = extract_values(result_or)  
             A1_or= A2_or + A3_or
-            k1_sim, k2_sim, k3_sim, A2_sim, A3_sim = best_sim_params
-            A1_sim= A2_sim + A3_sim
+            activity_or= integration(k1_or, k2_or, k3_or, A1_or, A2_or, A3_or)
 
-            activity_or = integration(k1_or, k2_or, k3_or, A1_or, A2_or, A3_or)
-            activity_sim = integration(k1_sim, k2_sim, k3_sim, A1_sim, A2_sim, A3_sim)
+            k1_sim, k2_sim, k3_sim, A2_sim, A3_sim  = extract_values(result_sim) 
+            A1_sim= A2_sim + A3_sim
+            activity_sim= integration(k1_sim, k2_sim, k3_sim, A1_sim, A2_sim, A3_sim)
+
+            fit_or = -A1_or * np.exp(-k1_or * t_fit) + A2_or * np.exp(-k2_or * t_fit) + A3_or * np.exp(-k3_or * t_fit)
+            fit_sim = -A1_sim * np.exp(-k1_sim * t_fit) + A2_sim * np.exp(-k2_sim * t_fit) + A3_sim * np.exp(-k3_sim * t_fit)
+
+            y_pred_or = -A1_or * np.exp(-k1_or * t_data_or[:-1]) + A2_or * np.exp(-k2_or * t_data_or[:-1]) + A3_or * np.exp(-k3_or * t_data_or[:-1])
+            y_pred_sim = -A1_sim * np.exp(-k1_sim * t_data_sim[:-1]) + A2_sim * np.exp(-k2_sim * t_data_sim[:-1]) + A3_sim * np.exp(-k3_sim * t_data_sim[:-1])
+            r2_or = calculate_r2(y_data_or[:-1], y_pred_or)
+            r2_sim = calculate_r2(y_data_sim[:-1], y_pred_sim)
 
             results.append({
                 'VOI': voi,
@@ -249,14 +184,14 @@ def total_computation(dict_total:dict, A0_administered:float, output_path:str):
                 'A1 original': float(A1_or),
                 'A2 original': float(A2_or),
                 'A3 original': float(A3_or),
-                'R2 original': float(best_r2_or),
+                'R2 original': float(r2_or),
                 'k1 simulated': float(k1_sim),
                 'k2 simulated': float(k2_sim),
                 'k3 simulated': float(k3_sim),
                 'A1 simulated': float(A1_sim),
                 'A2 simulated': float(A2_sim),
                 'A3 simulated': float(A3_sim),
-                'R2 simulated': float(best_r2_sim),
+                'R2 simulated': float(r2_sim),
             })
 
             plt.style.use('seaborn-v0_8-whitegrid')
@@ -326,6 +261,8 @@ def total_computation(dict_total:dict, A0_administered:float, output_path:str):
             plt.tight_layout()
             plt.show()
 
+            
+            print(voi)
             print('Original activity:', round(activity_or, 2), 'MBq*h')
             print('Simulated activity:', round(activity_sim, 2), 'MBq*h')
             print('Difference(%):', round(100*((activity_sim-activity_or)/activity_or), 2))
@@ -348,7 +285,8 @@ def total_computation(dict_total:dict, A0_administered:float, output_path:str):
 def dict_conversion(dict_total:dict, pixel_size:tuple):
 
     """
-    conversion of the integrated activity values from MBq*s to MBq*s/mL
+    Conversion of the integrated activity values from MBq*s to MBq*s/mL. The simulated and real volumes
+    are assumed to have the same voxel spacing. 
     
     """
 
