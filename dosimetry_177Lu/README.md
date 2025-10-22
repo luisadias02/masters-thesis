@@ -1,7 +1,7 @@
 In this repository, the developed code for the **dosimetry** of 177Lu patients is presented. 
 
 - This code was created as part of my masters thesis, where patients treated with 177Lu (specifically PSMA) were analyzed;
-- The worflow is as folows:
+- The worflow is as follows:
   
 <img width="1218" height="472" alt="image" src="https://github.com/user-attachments/assets/02fe77a5-f716-4f0e-84b1-106b60457cd9" />
 
