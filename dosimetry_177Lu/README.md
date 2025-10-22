@@ -1,6 +1,11 @@
 In this repository, the developed code for the **dosimetry** of 177Lu patients is presented. 
 
 - This code was created as part of my masters thesis, where patients treated with 177Lu (specifically PSMA) were analyzed;
+- The worflow is as folows:
+
+  <img width="937" height="179" alt="image" src="https://github.com/user-attachments/assets/262aedd5-0ec2-47f8-b491-53d244602bc0" />
+
+
 - Two sets of data (real and simulated) are studied, to ultimately be compared;
 - The entire workflow is run in the *run_main.ipynb* file
 
