@@ -1,10 +1,8 @@
-import sys
 import numpy as np
-import matplotlib.pyplot as plt
 import SimpleITK as sitk
 import os 
 import functions
-from SimpleITK import ResampleImageFilter, sitkNearestNeighbor, Transform
+from SimpleITK import ResampleImageFilter, Transform
 
 def input_volumes(volume_path: str, seg_path: str):
 
@@ -98,7 +96,7 @@ def map_computation(dict_cumulated: dict, masks: dict, volume_path: str, output_
     total_array = np.zeros((size[0], size[1], size[2]))
     for key, value in keys.items():
         conv_voi= (masks[key]/np.sum(masks[key]))*dict_cumulated[value][index] #index 0 equals the original image cumulated activities
-        total_array += conv_voi                                            #index 1 equals the simulated image cumulated activities
+        total_array += conv_voi                                                #index 1 equals the simulated image cumulated activities
 
     total_image= sitk.GetImageFromArray(total_array)
     total_image.SetDirection(functions.read_dicom(volume_path).GetDirection())

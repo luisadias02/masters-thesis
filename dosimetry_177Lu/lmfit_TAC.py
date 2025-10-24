@@ -18,7 +18,7 @@ def triexponential_tac(t:float, k1:float, k2:float, k3:float, A2:float, A3:float
 
 def prepare_data(dict_vois:dict):
     """
-    prepares the data from the dict, where the first value correspondes to the activity 
+    prepares the data from the dict, where the first value corresponds to the activity 
     and the second to the std
 
     """
@@ -77,18 +77,6 @@ def triexponential_tac_computation(dict_vois:dict, plot=True, voi=None):
         params['A3'].max = np.inf
 
     result = model.fit(y_data, params, t=t_data, weights=1/sigma)
-
-    if plot:
-        plt.errorbar(t_data[:-1], y_data[:-1], yerr=sigma[:-1], fmt='o', label='Data')
-        t_fit = np.linspace(min(t_data), 135, 200)
-        y_fit = model.eval(result.params, t=t_fit)
-        plt.plot(t_fit, y_fit, label='Fit')
-        plt.xlabel('Time')
-        plt.ylabel('Activity')
-        plt.grid()
-        plt.legend()
-        plt.title('Triexponential Fit with lmfit')
-        plt.show()
 
     return result
 
@@ -157,8 +145,8 @@ def total_computation(dict_total:dict, A0_administered:float, output_path:str):
             time_points = np.array([0, 4, 24, 144, 200]) #for plotting
             t_fit = np.linspace(time_points.min(), time_points.max(), 100)
 
-            result_or= triexponential_tac_computation(original, plot=False, voi= voi)
-            result_sim= triexponential_tac_computation(simulated, plot=False, voi= voi)
+            result_or= triexponential_tac_computation(original, voi= voi)
+            result_sim= triexponential_tac_computation(simulated, voi= voi)
 
             k1_or, k2_or, k3_or, A2_or, A3_or = extract_values(result_or)  
             A1_or= A2_or + A3_or
@@ -286,7 +274,7 @@ def dict_conversion(dict_total:dict, pixel_size:tuple):
 
     """
     Conversion of the integrated activity values from MBq*s to MBq*s/mL. The simulated and real volumes
-    are assumed to have the same voxel spacing. 
+    are assumed to have the same voxel spacing. In 177Lu imaging, usually 4.64 mm voxels are standard.
     
     """
 

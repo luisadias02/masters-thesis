@@ -1,13 +1,10 @@
-import sys 
 import SimpleITK as sitk
 import numpy as np 
-import os
 import functions
 import matplotlib.pyplot as plt
-from SimpleITK import ResampleImageFilter, sitkNearestNeighbor, Transform
+from SimpleITK import ResampleImageFilter, Transform
 from scipy import signal
-from matplotlib import rcParams
-import matplotlib as mpl
+
 
 def read_images(activity_map_path:str, seg_path:str):
 
@@ -177,6 +174,8 @@ def dvh(abdose_or_path: str, abdose_sim_path: str, seg_path: str, injected_activ
     resampled_seg_sim = read_resample(seg_path, abdose_sim_path)
     
     keys = {1:'spleen', 2:'right kidney', 3:'left kidney', 5:'liver', 22:'tumour 1', 23:'tumour 2'} #segmentation keys, if TotalSegmentator is used
+    
+    #these limits were defined for the patients used in my thesis.
     xlimits = {
     1: (0, 4100),   # spleen
     2: (0, 9000),   # right kidney
